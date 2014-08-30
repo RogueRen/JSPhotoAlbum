@@ -11,6 +11,7 @@ var photo={
         rigthimglist();
         martop();
         Events();
+        customscroll.create();
     }
 }
 //    屏幕宽度百分比
@@ -22,7 +23,8 @@ var photo={
         return (document.documentElement.clientHeight/100)*num;
     }
     var time=800;
-    var cubic='cubic-bezier(0.4,0.5,0,1)';
+    var cubic='cubic-bezier(0.4,0.5,0,0.9)';
+    var opac=0.15;
 //    上边距
     var WINDOW_MARGIN=WINDOW_HEIGHT(70);
     window.photojs=photo;
@@ -37,32 +39,33 @@ var photo={
 //    初始化右侧图片
     var rigthimglist=function(){
         $(".photolist .on").nextAll().each(function(i){
-            var parameter={
-                left:WINDOW_WIDTH(60)+i*(WINDOW_WIDTH(5)),
-                zi:999-i,
-                opc:1-i*0.2,
-                src:$(this).find(".imgbox img").attr("src"),
-                width:"15%",
-                rotateY:"-40deg",
-                perspective:"1000px"
+            $(this).show();
+            var parameter = {
+                left: WINDOW_WIDTH(60) + i * (WINDOW_WIDTH(5)),
+                zi: 999 - i,
+                opc: 1 - i * opac,
+                src: $(this).find(".imgbox img").attr("src"),
+                width: "15%",
+                rotateY: "-40deg",
+                perspective: "1000px"
             };
-            createimg($(this),parameter);
-
+            createimg($(this), parameter);
         });
     }
 //    初始化左侧图片
     var leftimglist=function(){
         $(".photolist .on").prevAll().each(function(i){
-            var parameter={
-                left:WINDOW_WIDTH(25)-i*(WINDOW_WIDTH(5)),
-                zi:999-i,
-                opc:1-i*0.2,
-                src:$(this).find(".imgbox img").attr("src"),
-                width:"15%",
-                rotateY:"40deg",
-                perspective:"1000px"
+            $(this).show();
+            var parameter = {
+                left: WINDOW_WIDTH(25) - i * (WINDOW_WIDTH(5)),
+                zi: 999 - i,
+                opc: 1 - i * opac,
+                src: $(this).find(".imgbox img").attr("src"),
+                width: "15%",
+                rotateY: "40deg",
+                perspective: "1000px"
             };
-            createimg($(this),parameter);
+            createimg($(this), parameter);
         });
     }
 //    初始化位置、倒影
@@ -81,15 +84,49 @@ var photo={
     var Events=function(){
         $(".photolist li").click(function(){
             if($(this).is(".on")==false) {
-                $(".photolist li").stop(true,false);
-                $(".photolist li .imgtran").stop(true,false);
                 animate.centerimg($(this));
             }
         });
     }
+//     滚动条
+    var customscroll={
+        create:function(){
+            var lunum = $(".photolist li").length;
+            var sw = parseFloat(100 / lunum);
+            var barw=sw;
+            if(sw<5){
+                barw=5;
+            }
+            var onew=$(".scroll").width()/100;
+            $(".scroll .scrollbar").css({width:barw+"%","margin-left":$(".photolist li.on").prevAll().length*onew});
+            $(".photolist").bind('mousewheel', function(event, delta) {
+                var left=$(".scroll .scrollbar").css("margin-left");
+                left=parseInt(left.replace("px",""));
+                if(delta>0){
+                    left=parseInt(left+sw*onew);
+                    var scrollw=$(".scroll").width()-barw*($(".scroll").width()/100)-6;
+                    if(left>=scrollw) {
+                        left=scrollw;
+                    }
+                    $(".scroll .scrollbar").css({"margin-left":left+"px"});
+                    animate.centerimg($(".photolist li.on").next());
+                }
+                else{
+                    left=parseInt(left-sw*onew);
+                    if(left<=0) {
+                        left=4;
+                    }
+                    $(".scroll .scrollbar").css({"margin-left": left + "px"});
+                    animate.centerimg($(".photolist li.on").prev());
+                }
+            });
+        }
+    };
 //    动画效果
     var animate={
         centerimg:function($this){
+            $(".photolist li").stop(false,true);
+            $(".photolist li .imgtran").stop(false,true);
             var w = ($this.width() / 15) * 20;
             var h = ($this.height() / 15) * 20;
             $this.addClass("on");
@@ -99,28 +136,40 @@ var photo={
         },
         leftimg:function($this){
             $this.prevAll().each(function(i){
-                var parameter = {
-                    left: WINDOW_WIDTH(25) - i * (WINDOW_WIDTH(5)),
-                    zi: 999 - i,
-                    opc: 1 - i * 0.15,
-                    width: "15%",
-                    rotateY: "40deg",
-                    perspective: "1000px"
-                };
-                animate.animateimg($(this), parameter);
+                if(i<10) {
+                    $(this).show();
+                    var parameter = {
+                        left: WINDOW_WIDTH(25) - i * (WINDOW_WIDTH(5)),
+                        zi: 999 - i,
+                        opc: 1 - i * opac,
+                        width: "15%",
+                        rotateY: "40deg",
+                        perspective: "1000px"
+                    };
+                    animate.animateimg($(this), parameter);
+                }
+                else{
+                    $(this).hide();
+                }
             });
         },
         rigthimg:function($this){
             $this.nextAll().each(function(i){
-                var parameter = {
-                    left: WINDOW_WIDTH(60) + i * (WINDOW_WIDTH(5)),
-                    zi: 999 - i,
-                    opc: 1 - i * 0.2,
-                    width: "15%",
-                    rotateY: "-40deg",
-                    perspective: "1000px"
-                };
-                animate.animateimg($(this), parameter);
+                if(i<10) {
+                    $(this).show();
+                    var parameter = {
+                        left: WINDOW_WIDTH(60) + i * (WINDOW_WIDTH(5)),
+                        zi: 999 - i,
+                        opc: 1 - i * opac,
+                        width: "15%",
+                        rotateY: "-40deg",
+                        perspective: "1000px"
+                    };
+                    animate.animateimg($(this), parameter);
+                }
+                else{
+                    $(this).hide();
+                }
             });
         },
         animateimg:function($this,obj){
